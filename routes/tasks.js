@@ -19,6 +19,31 @@ router.get('/', async function name(req, res) {
     }
 })
 
+// Get task details
+router.get('/:taskId', async function (req, res) {
+    if (ObjectId.isValid(req.params.taskId)) {
+        try {
+            const tasks = await Task.find({ _id: req.params.taskId }, "-owner")
+                .populate('collaborators', '-password')
+                .populate('owner', '-password')
+                .exec()
+            // .count()
+
+            if (!tasks) {
+                return res.status(404).json("No Tasks found")
+            }
+
+            res.status(200).json(tasks[0])
+        } catch (error) {
+            console.error(error)
+            res.status(500).json({ err: 'Unable to retrieve task' })
+        }
+    } else {
+        res.status(500).json({ error: "Invalid Id" })
+    }
+})
+
+
 // Add new Task
 router.post('/new-task', async function name(req, res) {
     try {
@@ -63,7 +88,6 @@ router.post('/', async function (req, res) {
     }
 
 })
-
 
 
 // Count All, done, and todo tasks count
