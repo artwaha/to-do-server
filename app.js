@@ -29,8 +29,8 @@ app.use('/collaborators', collaboratorRouter)
 
 mongoose.set('strictQuery', false);
 
-// const uri = "mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db"
-const uri = "mongodb://localhost:27017/todo"
+const uri = "mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db"
+// const uri = "mongodb://localhost:27017/todo"
 
 const main = async function () {
   try {
