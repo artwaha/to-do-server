@@ -29,10 +29,12 @@ app.use('/collaborators', collaboratorRouter)
 
 mongoose.set('strictQuery', false);
 
+const uri = "mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db"
+
 main().catch(err => console.log(err));
 
 async function main() {
-  await mongoose.connect('mongodb://localhost:27017/todo');
+  await mongoose.connect(uri);
 }
 
 module.exports = app;
