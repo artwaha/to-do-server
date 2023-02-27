@@ -43,6 +43,30 @@ router.get('/:taskId', async function (req, res) {
     }
 })
 
+router.patch('/:taskId', async function (req, res) {
+    // res.json(req.body)
+    // console.log(req.body)
+    if (ObjectId.isValid(req.params.taskId)) {
+        try {
+            const tasks = await Task.findByIdAndUpdate(
+                req.params.taskId,
+                { $set: req.body },
+                { new: true })
+                .exec()
+
+            if (!tasks) {
+                return res.status(404).json("Unable to update")
+            }
+            res.status(200).json(tasks)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json({ err: 'Unable to Update' })
+        }
+    } else {
+        res.status(500).json({ err: 'Unable to Update' })
+    }
+})
+
 
 // Add new Task
 router.post('/new-task', async function name(req, res) {
@@ -62,6 +86,7 @@ router.post('/new-task', async function name(req, res) {
         res.status(500).json({ err: 'Unable to add task' })
     }
 })
+
 
 // Get tasks for a given user - POST method
 router.post('/', async function (req, res) {
