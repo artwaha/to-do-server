@@ -1,7 +1,7 @@
 var express = require('express');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-// var cors = require('cors')
+var cors = require('cors')
 const { default: mongoose } = require('mongoose');
 
 // Routers
@@ -13,7 +13,7 @@ const collaboratorRouter = require('./routes/collaborators')
 
 var app = express();
 
-// app.use(cors())
+app.use(cors())
 
 
 app.use(logger('dev'));
