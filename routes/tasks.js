@@ -1,5 +1,6 @@
 const { ObjectId } = require('bson')
 const express = require('express')
+const Collaborator = require('../model/Collaborator')
 const Task = require('../model/Task')
 const router = express.Router()
 
@@ -44,29 +45,54 @@ router.get('/:taskId', async function (req, res) {
 })
 
 router.patch('/:taskId', async function (req, res) {
-    // res.json(req.body)
-    // console.log(req.body)
+    let update = req.body;
+
     if (ObjectId.isValid(req.params.taskId)) {
         try {
-            const tasks = await Task.findByIdAndUpdate(
-                req.params.taskId,
-                { $set: req.body },
-                { new: true })
-                .exec()
-
-            if (!tasks) {
-                return res.status(404).json("Unable to update")
+            if (update.collaborators && Array.isArray(update.collaborators)) {
+                const task = await Task.findById(req.params.taskId);
+                update.collaborators = task.collaborators.filter(
+                    (c) => !update.collaborators.includes(c.toString())
+                );
             }
-            res.status(200).json(tasks)
+            const updatedTask = await Task.findByIdAndUpdate(
+                req.params.taskId,
+                { $set: update },
+                { new: true }
+            );
+            if (!updatedTask) {
+                return res.status(404).json('Unable to update');
+            }
+            res.status(200).json(updatedTask);
         } catch (error) {
-            console.error(error)
-            res.status(500).json({ err: 'Unable to Update' })
+            console.error(error);
+            res.status(500).json({ err: 'Unable to Update' });
         }
     } else {
-        res.status(500).json({ err: 'Unable to Update' })
+        res.status(500).json({ err: 'Unable to Update' });
+    }
+});
+
+router.delete('/:taskId', async function (req, res) {
+    try {
+        const taskId = req.params.taskId
+        if (ObjectId.isValid(taskId)) {
+
+            const deletedTask = await Task.findByIdAndDelete(taskId)
+            if (!deletedTask) {
+                return res.status(404).json({ error: `Task with id ${taskId} not found` });
+            }
+
+            return res.status(200).json({ message: 'Task deleted successfully', data: deletedTask });
+        } else {
+            res.status(500).json({ error: "Invalid Id" })
+        }
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ err: 'Unable to retrieve task' })
     }
 })
-
 
 // Add new Task
 router.post('/new-task', async function name(req, res) {
@@ -163,23 +189,23 @@ router.post('/todo-tasks', async function (req, res) {
 
 })
 
-// Delete all but the firts 5 Tasks
-router.delete('/', async (req, res) => {
-    try {
-        const numTasksToKeep = 5;
-        const tasksToDelete = await Task.find()
-            .sort({ _id: 1 })
-            .skip(numTasksToKeep)
-            .exec()
+// // Delete all but the firts 5 Tasks
+// router.delete('/', async (req, res) => {
+//     try {
+//         const numTasksToKeep = 5;
+//         const tasksToDelete = await Task.find()
+//             .sort({ _id: 1 })
+//             .skip(numTasksToKeep)
+//             .exec()
 
-        const idsToDelete = tasksToDelete.map(task => task._id);
-        await Task.deleteMany({ _id: { $in: idsToDelete } });
-        res.status(200).send(`Deleted all but the first ${numTasksToKeep} tasks.`);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Internal Server Error');
-    }
-});
+//         const idsToDelete = tasksToDelete.map(task => task._id);
+//         await Task.deleteMany({ _id: { $in: idsToDelete } });
+//         res.status(200).send(`Deleted all but the first ${numTasksToKeep} tasks.`);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).send('Internal Server Error');
+//     }
+// });
 
 
 module.exports = router
