@@ -6,11 +6,13 @@
 # Setup
 Clone the project: `git clone https://github.com/artwaha/to-do-server.git`
 Then navigate to the project directory and install dependencies by `npm install`
-To run the project `npm start`
+
+# Running the Project
+Run the project by  `npm start` (port configured to 3001, but you can change it in the **/bin/www** on the line **var port = normalizePort(process.env.PORT || '3001');**)
 
 The Database is hosted at mongodb atlas "mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db".
 
-# Running Locally
+# Running Fully Locally
 Go to **_app.js_** and _uncomment_ this line  **const uri = "mongodb://localhost:27017/todo"**  and then comment the line **const uri = "mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db"** . 
 
 This will switch the database from the online MongoDB atlas database server to your local MongoDBdatabase server. You can choose to edit the **URI** connection string to match your local Mongodb Server if needed. 
@@ -27,3 +29,4 @@ If you dont want the hasle of importing the database files to your local MongoDB
 # NODEMON  (Option)
 For speedy development, you can switch to using `nodemon` package by editing the `package.json` file.
 Just replace the line **"start": "node ./bin/www"** with **"start": "nodemon ./bin/www"**
+
