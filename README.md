@@ -1,16 +1,15 @@
 # Repository 
-[Github](https://github.com/artwaha/to-do-server) 
-[cyclic](https://app.cyclic.sh/#/app/artwaha-to-do-server/overview)
-
+1. [Github](https://github.com/artwaha/to-do-server) 
+2. [cyclic](https://app.cyclic.sh/#/app/artwaha-to-do-server/overview)
+3. [MongoDB Atlas - database server](mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db)
 
 # Setup
 Clone the project: `git clone https://github.com/artwaha/to-do-server.git`
 Then navigate to the project directory and install dependencies by `npm install`
 
 # Running the Project
-Run the project by  `npm start` (port configured to 3001, but you can change it in the **/bin/www** on the line **var port = normalizePort(process.env.PORT || '3001');**)
+Run the project by  `npm start` (port configured to **3001**, but you can change it in the **/bin/www** file on the line `var port = normalizePort(process.env.PORT || '3001');)`
 
-The Database is hosted at mongodb atlas "mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db".
 
 # Running Fully Locally
 Go to **_app.js_** and _uncomment_ this line  **const uri = "mongodb://localhost:27017/todo"**  and then comment the line **const uri = "mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db"** . 
@@ -26,7 +25,7 @@ If you dont want the hasle of importing the database files to your local MongoDB
 
 `I recommend  you just import the database files to your local server for maximum perfomance`
 
-# NODEMON  (Option)
+# NODEMON  (Optional)
 For speedy development, you can switch to using `nodemon` package by editing the `package.json` file.
-Just replace the line **"start": "node ./bin/www"** with **"start": "nodemon ./bin/www"**
+Just replace the line **`"start": "node ./bin/www"`** with **`"start": "nodemon ./bin/www"`**
 
