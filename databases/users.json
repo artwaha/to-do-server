@@ -1,0 +1,37 @@
+[{
+  "_id": {
+    "$oid": "63f7c47c595aab4eb0165135"
+  },
+  "username": "sholmes",
+  "name": "Sherlock Holmes",
+  "email": "sholmes@gmail.com",
+  "password": "password123",
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "63f7c47c595aab4eb0165136"
+  },
+  "username": "jbond",
+  "name": "James Bond",
+  "email": "jbond@gmail.com",
+  "password": "password456",
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "63f844a3e4230b11711b97f4"
+  },
+  "username": "jbourne",
+  "name": "Jason Bourne",
+  "email": "jbourne@gmail.com",
+  "password": "password789",
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "63f866d159b75af7fa28231d"
+  },
+  "username": "jwick",
+  "name": "John Wick",
+  "email": "jwick@gmail.com",
+  "password": "password111",
+  "__v": 0
+}]

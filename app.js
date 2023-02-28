@@ -24,7 +24,6 @@ app.use(cookieParser());
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/tasks', tasksRouter);
-app.use('/todo-list', todoListRouter)
 app.use('/collaborators', collaboratorRouter)
 
 mongoose.set('strictQuery', false);
