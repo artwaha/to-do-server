@@ -1,7 +1,7 @@
 # Repository 
 1. [Github](https://github.com/artwaha/to-do-server) 
 2. [cyclic](https://app.cyclic.sh/#/app/artwaha-to-do-server/overview)
-3. [MongoDB Atlas - database server](mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db)
+3. [MongoDB Atlas database server](mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db)
 
 # Setup
 Clone the project: `git clone https://github.com/artwaha/to-do-server.git`

@@ -8,7 +8,6 @@ const { default: mongoose } = require('mongoose');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var tasksRouter = require('./routes/tasks')
-var todoListRouter = require('./routes/todoList')
 const collaboratorRouter = require('./routes/collaborators')
 
 var app = express();
@@ -28,8 +27,8 @@ app.use('/collaborators', collaboratorRouter)
 
 mongoose.set('strictQuery', false);
 
-const uri = "mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db"
-// const uri = "mongodb://localhost:27017/todo"
+// const uri = "mongodb+srv://Abdul-razak:351998zaki@cluster-abdul-razak.mxwdzjt.mongodb.net/todo-db"
+const uri = "mongodb://localhost:27017/tododb"
 
 const main = async function () {
   try {
