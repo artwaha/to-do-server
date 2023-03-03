@@ -4,154 +4,176 @@ const Collaborator = require('../model/Collaborator')
 const Task = require('../model/Task')
 const router = express.Router()
 
-
-// URL: http://localhost:3001/tasks
-
 // Get All tasks
 router.get('/', async function name(req, res) {
     try {
         const tasks = await Task.find()
+            .populate('collaborators')
+            .populate('owner')
             .exec()
-        // .count()
+
+        if (!tasks.length) {
+            return res.status(404).json({ message: "Unable to retrieve Tasks" })
+        }
+
         res.status(200).json(tasks)
     } catch (error) {
         console.error(error)
-        res.status(500).json({ err: 'Unable to add task' })
+        res.status(500).json({ message: 'Server Error' })
     }
 })
 
 // Get task details
 router.get('/:taskId', async function (req, res) {
-    if (ObjectId.isValid(req.params.taskId)) {
-        try {
-            const tasks = await Task.find({ _id: req.params.taskId }, "-owner")
+    try {
+        const taskId = req.params.taskId;
+        if (ObjectId.isValid(taskId)) {
+            const task = await Task.findById(taskId)
                 .populate('collaborators', '-password')
                 .populate('owner', '-password')
                 .exec()
-            // .count()
 
-            if (!tasks) {
-                return res.status(404).json("No Tasks found")
+            if (!task) {
+                return res.status(404).json({ message: "Unable to retrieve task details" })
             }
 
-            res.status(200).json(tasks[0])
-        } catch (error) {
-            console.error(error)
-            res.status(500).json({ err: 'Unable to retrieve task' })
+            res.status(200).json(task)
+        } else {
+            res.status(400).json({ message: "Invalid Task Id" })
         }
-    } else {
-        res.status(500).json({ error: "Invalid Id" })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Server Error' })
     }
 })
 
+// Update Task
 router.patch('/:taskId', async function (req, res) {
-    let update = req.body;
+    try {
+        const update = req.body;
+        const taskId = req.params.taskId
 
-    if (ObjectId.isValid(req.params.taskId)) {
-        try {
+        if (ObjectId.isValid(taskId)) {
+            // This is below code is  incase there's collaborator field. 
+            // The collaborator field would contain an array of collaborators to remove from the task
+            // This code does that
             if (update.collaborators && Array.isArray(update.collaborators)) {
-                const task = await Task.findById(req.params.taskId);
+                const task = await Task.findById(taskId);
                 update.collaborators = task.collaborators.filter(
                     (c) => !update.collaborators.includes(c.toString())
                 );
             }
+
             const updatedTask = await Task.findByIdAndUpdate(
-                req.params.taskId,
+                taskId,
                 { $set: update },
                 { new: true }
             );
+
             if (!updatedTask) {
-                return res.status(404).json('Unable to update');
+                return res.status(404).json({ message: 'Unable to update Task' });
             }
+
             res.status(200).json(updatedTask);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ err: 'Unable to Update' });
+        } else {
+            res.status(400).json({ message: 'Invalid Task Id' });
         }
-    } else {
-        res.status(500).json({ err: 'Unable to Update' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ err: 'Server Error' });
     }
 });
 
+// Delete Task
 router.delete('/:taskId', async function (req, res) {
     try {
         const taskId = req.params.taskId
         if (ObjectId.isValid(taskId)) {
 
             const deletedTask = await Task.findByIdAndDelete(taskId)
+
             if (!deletedTask) {
-                return res.status(404).json({ error: `Task with id ${taskId} not found` });
+                return res.status(404).json({ message: `Task with id ${taskId} not found` });
             }
 
             return res.status(200).json({ message: 'Task deleted successfully', data: deletedTask });
         } else {
-            res.status(500).json({ error: "Invalid Id" })
+            res.status(400).json({ message: "Invalid Task Id" })
         }
 
     } catch (error) {
         console.error(error)
-        res.status(500).json({ err: 'Unable to retrieve task' })
+        res.status(500).json({ message: 'Server Error' })
     }
 })
 
 // Add new Task
 router.post('/new-task', async function name(req, res) {
     try {
-        const task = new Task(req.body.newTask)
+        const newTask = req.body
+
+        const task = new Task(newTask)
         const savedTask = await task.save()
 
-        const tasks = await Task.find({ owner: req.body.userId }).
-            populate('owner', '-password').
-            populate('collaborators', '-password')
-            .exec()
-        // .count()
+        if (!savedTask) {
+            return res.status(404).json({ message: "Unable to Add task" })
+        }
 
-        res.status(200).json(tasks)
+        res.status(200).json(savedTask)
     } catch (error) {
         console.error(error)
-        res.status(500).json({ err: 'Unable to add task' })
+        res.status(500).json({ message: 'Server Error' })
     }
 })
 
 
 // Get tasks for a given user - POST method
 router.post('/', async function (req, res) {
-    if (ObjectId.isValid(req.body.userId)) {
-        try {
+    try {
+        const userId = req.body.userId
+
+        if (ObjectId.isValid(userId)) {
             const tasks = await Task.find({ owner: req.body.userId })
                 .populate('collaborators', '-password')
                 .populate('owner', '-password')
                 .exec()
-            // .count()
 
-            if (!tasks) {
+            if (!tasks.length) {
                 return res.status(404).json("No Tasks found")
             }
-
             res.status(200).json(tasks)
-            // res.status(200).json(req.body.userId)
-        } catch (error) {
-            console.error(error)
-            res.status(500).json({ err: 'Unable to retrieve task' })
+        } else {
+            res.status(400).json({ message: "Invalid User Id" })
         }
-    } else {
-        res.status(500).json({ error: "Invalid Id" })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Server Error' })
     }
-
 })
 
 
 // Count All, done, and todo tasks count
 router.post('/count-tasks', async function (req, res) {
     try {
-        const tasks = await Task.find({ owner: req.body.userId }).count().exec()
-        const done = await Task.find({ isCompleted: true, owner: req.body.userId }).count().exec()
-        const todo = await Task.find({ isCompleted: false, owner: req.body.userId }).count().exec()
+        const { userId } = req.body
 
-        res.status(200).json({ tasks, done, todo })
+        if (ObjectId.isValid(userId)) {
+            const tasks = await Task.find({ owner: userId }).count().exec()
+            const done = await Task.find({ isCompleted: true, owner: userId }).count().exec()
+            const todo = await Task.find({ isCompleted: false, owner: userId }).count().exec()
+
+            if (!tasks || !done || !todo) {
+                return res.status(404).json({ message: "Unable to get Tasks counts" })
+            }
+
+            res.status(200).json({ tasks: tasks, done: done, todo: todo })
+        } else {
+            res.status(400).json({ message: "Invalid User Id" })
+        }
     } catch (error) {
         console.error(error)
-        res.status(500).json({ err: 'Unable to get task' })
+        res.status(500).json({ message: 'Server Error' })
     }
 
 })
@@ -159,15 +181,26 @@ router.post('/count-tasks', async function (req, res) {
 // Get All done  tasks for user
 router.post('/done-tasks', async function (req, res) {
     try {
-        const done = await Task.find({ isCompleted: true, owner: req.body.userId })
-            .populate('collaborators', '-password')
-            .populate('owner', '-password')
-            .exec()
+        const { userId } = req.body
 
-        res.status(200).json(done)
+        if (ObjectId.isValid(userId)) {
+            const done = await Task.find({ isCompleted: true, owner: userId })
+                .populate('collaborators', '-password')
+                .populate('owner', '-password')
+                .exec()
+
+            if (!done.length) {
+                res.status(404).json({ message: "Unable to get Done Tasks" })
+            }
+
+            res.status(200).json(done)
+        } else {
+            res.status(400).json({ message: "Invalid User Id" })
+        }
+
     } catch (error) {
         console.error(error)
-        res.status(500).json({ err: 'Unable to get task' })
+        res.status(500).json({ message: 'Server Error' })
     }
 
 })
@@ -175,37 +208,27 @@ router.post('/done-tasks', async function (req, res) {
 // Get All, todo  tasks for user
 router.post('/todo-tasks', async function (req, res) {
     try {
+        const { userId } = req.body
 
-        const todo = await Task.find({ isCompleted: false, owner: req.body.userId })
-            .populate('collaborators', '-password')
-            .populate('owner', '-password')
-            .exec()
+        if (ObjectId.isValid(userId)) {
+            const todo = await Task.find({ isCompleted: false, owner: req.body.userId })
+                .populate('collaborators', '-password')
+                .populate('owner', '-password')
+                .exec()
 
-        res.status(200).json(todo)
+            if (!todo.length) {
+                return res.status(404).json({ message: "Unable to get Todo tasks" })
+            }
+
+            res.status(200).json(todo)
+        } else {
+            res.status(400).json({ message: "Invalid User Id" })
+        }
     } catch (error) {
         console.error(error)
         res.status(500).json({ err: 'Unable to get task' })
     }
 
 })
-
-// // Delete all but the firts 5 Tasks
-// router.delete('/', async (req, res) => {
-//     try {
-//         const numTasksToKeep = 5;
-//         const tasksToDelete = await Task.find()
-//             .sort({ _id: 1 })
-//             .skip(numTasksToKeep)
-//             .exec()
-
-//         const idsToDelete = tasksToDelete.map(task => task._id);
-//         await Task.deleteMany({ _id: { $in: idsToDelete } });
-//         res.status(200).send(`Deleted all but the first ${numTasksToKeep} tasks.`);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Internal Server Error');
-//     }
-// });
-
 
 module.exports = router
