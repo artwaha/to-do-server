@@ -141,8 +141,10 @@ router.post("/", async function (req, res) {
         .populate("owner", "-password")
         .exec();
 
+      // const collaborator = await Collaborator.findOne({tas})
+
       // if (!tasks.length) {
-      //   return res.status(404).json("No Tasks found");
+      //   return res.status(200).json([]);
       // }
 
       res.status(200).json(tasks);
