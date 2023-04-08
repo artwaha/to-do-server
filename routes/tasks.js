@@ -141,9 +141,10 @@ router.post("/", async function (req, res) {
         .populate("owner", "-password")
         .exec();
 
-      if (!tasks.length) {
-        return res.status(404).json("No Tasks found");
-      }
+      // if (!tasks.length) {
+      //   return res.status(404).json("No Tasks found");
+      // }
+
       res.status(200).json(tasks);
     } else {
       res.status(400).json({ message: "Invalid User Id" });

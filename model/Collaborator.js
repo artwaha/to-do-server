@@ -1,16 +1,27 @@
 const { default: mongoose } = require("mongoose");
 
 const collaboratorSchema = new mongoose.Schema({
-    taskId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Task',
-        required: true
+  taskId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Task",
+    required: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  // NOTE: Adding collaborator status
+  invitationStatus: {
+    type: String,
+    enum: ["accepted", "rejected", "pending"],
+    default: "pending",
+    validate: {
+      validator: function (v) {
+        return ["accepted", "rejected", "pending"].includes(v);
+      },
     },
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    }
-})
+  },
+});
 
-module.exports = mongoose.model('Collaborator', collaboratorSchema)
+module.exports = mongoose.model("Collaborator", collaboratorSchema);

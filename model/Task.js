@@ -1,26 +1,30 @@
 const { default: mongoose } = require("mongoose");
 
 const taskSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        requred: true
+  title: {
+    type: String,
+    requred: true,
+  },
+  description: {
+    type: String,
+    default: "",
+  },
+  isCompleted: {
+    type: Boolean,
+    default: false,
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  collaborators: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: [],
     },
-    description: String,
-    isCompleted: {
-        type: Boolean,
-        default: false
-    },
-    owner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    collaborators: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
-        }
-    ]
-})
+  ],
+});
 
-module.exports = mongoose.model('Task', taskSchema)
+module.exports = mongoose.model("Task", taskSchema);
