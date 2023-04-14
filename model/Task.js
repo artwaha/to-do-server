@@ -18,13 +18,13 @@ const taskSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  collaborators: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: [],
-    },
-  ],
 });
 
+// collaborators: [
+//   {
+//     type: mongoose.Schema.Types.ObjectId,
+//     ref: "User",
+//     default: [],
+//   },
+// ],
 module.exports = mongoose.model("Task", taskSchema);
