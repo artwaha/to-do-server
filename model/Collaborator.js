@@ -11,7 +11,6 @@ const collaboratorSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  // NOTE: Adding collaborator status
   invitationStatus: {
     type: String,
     enum: ["accepted", "rejected", "pending"],

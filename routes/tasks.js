@@ -2,6 +2,7 @@ const { ObjectId } = require("bson");
 const express = require("express");
 const Collaborator = require("../model/Collaborator");
 const Task = require("../model/Task");
+const User = require("../model/User");
 const router = express.Router();
 
 // Get All tasks
@@ -36,9 +37,18 @@ router.get("/:taskId", async function (req, res) {
         .populate("userId", "-password")
         .exec();
 
-      const taskWithCollaborators = { ...task.toJSON(), collaborators };
+      const taskWithCollaborators = {
+        ...task.toJSON(),
+        collaborators,
+      };
 
-      res.status(200).json(taskWithCollaborators);
+      const collaboratorIds = collaborators.map((col) => col.userId._id);
+
+      const usersToInvite = await User.find({
+        _id: { $nin: [task.owner, ...collaboratorIds] },
+      });
+
+      res.status(200).json({ ...taskWithCollaborators, usersToInvite });
     } else {
       res.status(400).json({ message: "Invalid Task Id" });
     }
@@ -54,11 +64,13 @@ router.patch("/:taskId", async function (req, res) {
     const update = req.body;
     const taskId = req.params.taskId;
 
+    let response = {};
+
     if (ObjectId.isValid(taskId)) {
       if (update.collaborators && Array.isArray(update.collaborators)) {
-        await Collaborator.updateOne(
+        await Collaborator.updateMany(
           {
-            userId: update.collaborators[0],
+            userId: { $in: update.collaborators },
             taskId,
           },
           { $set: { invitationStatus: "rejected" } }
@@ -67,10 +79,9 @@ router.patch("/:taskId", async function (req, res) {
         delete update.collaborators;
       }
 
-      const response = await Task.findByIdAndUpdate(taskId, {
-        $set: update,
-      });
-
+      // const response = await Task.findByIdAndUpdate(taskId, {
+      //   $set: update,
+      // });
       res.status(200).json(response);
     } else {
       res.status(400).json({ message: "Invalid Task Id" });
