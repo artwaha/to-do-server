@@ -79,9 +79,10 @@ router.patch("/:taskId", async function (req, res) {
         delete update.collaborators;
       }
 
-      // const response = await Task.findByIdAndUpdate(taskId, {
-      //   $set: update,
-      // });
+      const response = await Task.findByIdAndUpdate(taskId, {
+        $set: update,
+      });
+
       res.status(200).json(response);
     } else {
       res.status(400).json({ message: "Invalid Task Id" });
@@ -120,23 +121,13 @@ router.delete("/:taskId", async function (req, res) {
 // Add new Task
 router.post("/new-task", async function name(req, res) {
   try {
-    // const newTask = req.body;
-    const newTasks = req.body;
-
-    // const task = new Task(newTask);
-    // const savedTask = await task.save();
-
-    const savedTasks = await Task.insertMany(newTasks);
-
+    const newTask = new Task(req.body);
+    const savedTask = await newTask.save();
     // if (!savedTask) {
     //   return res.status(404).json({ message: "Unable to Add task" });
     // }
 
-    if (!savedTasks) {
-      return res.status(404).json({ message: "Unable to Add task" });
-    }
-
-    res.status(200).json(savedTasks);
+    res.status(200).json(savedTask);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
