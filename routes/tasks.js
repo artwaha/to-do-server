@@ -27,11 +27,15 @@ router.get("/:taskId", async function (req, res) {
     const taskId = req.params.taskId;
 
     if (ObjectId.isValid(taskId)) {
-      const task = await Task.findById(taskId).exec();
+      const task = await Task.findOne({
+        _id: taskId,
+      })
+        .populate("owner", "name")
+        .exec();
 
       const collaborators = await Collaborator.find({
         taskId: taskId,
-        userId: { $ne: task.owner },
+        userId: { $ne: task.owner._id },
         invitationStatus: { $ne: "rejected" },
       })
         .populate("userId", "-password")
@@ -49,6 +53,7 @@ router.get("/:taskId", async function (req, res) {
       });
 
       res.status(200).json({ ...taskWithCollaborators, usersToInvite });
+      // res.status(200).json(task);
     } else {
       res.status(400).json({ message: "Invalid Task Id" });
     }
@@ -63,8 +68,6 @@ router.patch("/:taskId", async function (req, res) {
   try {
     const update = req.body;
     const taskId = req.params.taskId;
-
-    let response = {};
 
     if (ObjectId.isValid(taskId)) {
       if (update.collaborators && Array.isArray(update.collaborators)) {
