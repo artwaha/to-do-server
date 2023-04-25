@@ -31,6 +31,7 @@ router.get("/:taskId", async function (req, res) {
         _id: taskId,
       })
         .populate("owner", "name")
+        .populate("updatedby", "name")
         .exec();
 
       const collaborators = await Collaborator.find({
@@ -170,6 +171,15 @@ router.post("/count-tasks", async function (req, res) {
       const todo = await Task.find({ isCompleted: false, owner: userId })
         .count()
         .exec();
+      const collaborating = await Collaborator.find({
+        userId: userId,
+        invitationStatus: "accepted",
+      }).count();
+
+      const invitations = await Collaborator.find({
+        userId: userId,
+        invitationStatus: { $ne: "accepted" },
+      }).count();
 
       // NOTE: Okay with warning
       // if (!tasks || !done || !todo) {
@@ -178,7 +188,7 @@ router.post("/count-tasks", async function (req, res) {
       //     .json({ message: "No tasks found", tasks, done, todo });
       // }
 
-      res.status(200).json({ tasks, done, todo });
+      res.status(200).json({ tasks, done, todo, collaborating, invitations });
     } else {
       res.status(400).json({ message: "Invalid User Id" });
     }
