@@ -144,11 +144,53 @@ router.post("/", async function (req, res) {
     const userId = req.body.userId;
 
     if (ObjectId.isValid(userId)) {
+      // getting all tasks tha user owns
       const tasks = await Task.find({ owner: userId })
-        .select("title isCompleted")
+        .select("title isCompleted owner")
         .exec();
 
-      res.status(200).json(tasks);
+      // Getting all tasks to which user is collaborating
+      let collaboratingTasks = await Collaborator.find(
+        {
+          userId: userId,
+          invitationStatus: "accepted",
+        },
+        "taskId -_id"
+      )
+        .populate("taskId", "title isCompleted owner")
+        .exec();
+
+      collaboratingTasks = collaboratingTasks.map((t) => t.taskId);
+
+      collaboratingTasks = collaboratingTasks.map((task) => {
+        const taskObj = task.toObject();
+        taskObj.collaborating = true;
+        return taskObj;
+      });
+
+      // Getting all tasks to which user is invited
+      let invitationTasks = await Collaborator.find(
+        {
+          userId: userId,
+          invitationStatus: { $ne: "accepted" },
+        },
+        "-_id"
+      )
+        .populate("taskId", "title isCompleted owner")
+        .exec();
+
+      invitationTasks = invitationTasks.map((t) => t.taskId);
+
+      invitationTasks = invitationTasks.map((task) => {
+        const taskObj = task.toObject();
+        taskObj.invitation = true;
+        return taskObj;
+      });
+
+      // Combining all tasks now
+      const allTasks = [...tasks, ...collaboratingTasks, ...invitationTasks];
+
+      res.status(200).json(allTasks);
     } else {
       res.status(400).json({ message: "Invalid User Id" });
     }
