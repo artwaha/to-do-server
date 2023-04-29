@@ -2,18 +2,16 @@ const { ObjectId } = require("bson");
 const express = require("express");
 const Collaborator = require("../model/Collaborator");
 const Task = require("../model/Task");
+const User = require("../model/User");
 const router = express.Router();
 
 // Get All tasks
 router.get("/", async function name(req, res) {
   try {
-    const tasks = await Task.find()
-      .populate("collaborators")
-      .populate("owner")
-      .exec();
+    const tasks = await Task.find().populate("owner").exec();
 
     if (!tasks.length) {
-      return res.status(404).json({ message: "Unable to retrieve Tasks" });
+      return res.status(404).json({ message: "No Tasks Found", tasks });
     }
 
     res.status(200).json(tasks);
@@ -27,19 +25,36 @@ router.get("/", async function name(req, res) {
 router.get("/:taskId", async function (req, res) {
   try {
     const taskId = req.params.taskId;
+
     if (ObjectId.isValid(taskId)) {
-      const task = await Task.findById(taskId)
-        .populate("collaborators", "-password")
-        .populate("owner", "-password")
+      const task = await Task.findOne({
+        _id: taskId,
+      })
+        .populate("owner", "name")
+        .populate("updatedby", "name")
         .exec();
 
-      if (!task) {
-        return res
-          .status(404)
-          .json({ message: "Unable to retrieve task details" });
-      }
+      const collaborators = await Collaborator.find({
+        taskId: taskId,
+        userId: { $ne: task.owner._id },
+        invitationStatus: { $ne: "rejected" },
+      })
+        .populate("userId", "-password")
+        .exec();
 
-      res.status(200).json(task);
+      const taskWithCollaborators = {
+        ...task.toJSON(),
+        collaborators,
+      };
+
+      const collaboratorIds = collaborators.map((col) => col.userId._id);
+
+      const usersToInvite = await User.find({
+        _id: { $nin: [task.owner, ...collaboratorIds] },
+      });
+
+      res.status(200).json({ ...taskWithCollaborators, usersToInvite });
+      // res.status(200).json(task);
     } else {
       res.status(400).json({ message: "Invalid Task Id" });
     }
@@ -56,27 +71,23 @@ router.patch("/:taskId", async function (req, res) {
     const taskId = req.params.taskId;
 
     if (ObjectId.isValid(taskId)) {
-      // This is below code is  incase there's collaborator field.
-      // The collaborator field would contain an array of collaborators to remove from the task
-      // This code does that
       if (update.collaborators && Array.isArray(update.collaborators)) {
-        const task = await Task.findById(taskId);
-        update.collaborators = task.collaborators.filter(
-          (c) => !update.collaborators.includes(c.toString())
-        );
+        await Collaborator.updateMany(
+          {
+            userId: { $in: update.collaborators },
+            taskId,
+          },
+          { $set: { invitationStatus: "rejected" } }
+        ).exec();
+
+        delete update.collaborators;
       }
 
-      const updatedTask = await Task.findByIdAndUpdate(
-        taskId,
-        { $set: update },
-        { new: true }
-      );
+      const response = await Task.findByIdAndUpdate(taskId, {
+        $set: update,
+      });
 
-      if (!updatedTask) {
-        return res.status(404).json({ message: "Unable to update Task" });
-      }
-
-      res.status(200).json(updatedTask);
+      res.status(200).json(response);
     } else {
       res.status(400).json({ message: "Invalid Task Id" });
     }
@@ -114,14 +125,11 @@ router.delete("/:taskId", async function (req, res) {
 // Add new Task
 router.post("/new-task", async function name(req, res) {
   try {
-    const newTask = req.body;
-
-    const task = new Task(newTask);
-    const savedTask = await task.save();
-
-    if (!savedTask) {
-      return res.status(404).json({ message: "Unable to Add task" });
-    }
+    const newTask = new Task(req.body);
+    const savedTask = await newTask.save();
+    // if (!savedTask) {
+    //   return res.status(404).json({ message: "Unable to Add task" });
+    // }
 
     res.status(200).json(savedTask);
   } catch (error) {
@@ -136,22 +144,59 @@ router.post("/", async function (req, res) {
     const userId = req.body.userId;
 
     if (ObjectId.isValid(userId)) {
-      const tasks = await Task.find({ owner: req.body.userId })
-        .populate("collaborators", "-password")
-        .populate("owner", "-password")
+      // getting all tasks tha user owns
+      const tasks = await Task.find({ owner: userId })
+        .select("title isCompleted owner")
         .exec();
 
-      // if (!tasks.length) {
-      //   return res.status(404).json("No Tasks found");
-      // }
+      // Getting all tasks to which user is collaborating
+      let collaboratingTasks = await Collaborator.find(
+        {
+          userId: userId,
+          invitationStatus: "accepted",
+        },
+        "taskId -_id"
+      )
+        .populate("taskId", "title isCompleted owner")
+        .exec();
 
-      res.status(200).json(tasks);
+      collaboratingTasks = collaboratingTasks.map((t) => t.taskId);
+
+      collaboratingTasks = collaboratingTasks.map((task) => {
+        const taskObj = task.toObject();
+        taskObj.collaborating = true;
+        return taskObj;
+      });
+
+      // Getting all tasks to which user is invited
+      let invitationTasks = await Collaborator.find(
+        {
+          userId: userId,
+          invitationStatus: { $ne: "accepted" },
+        },
+        "-_id"
+      )
+        .populate("taskId", "title isCompleted owner")
+        .exec();
+
+      invitationTasks = invitationTasks.map((t) => t.taskId);
+
+      invitationTasks = invitationTasks.map((task) => {
+        const taskObj = task.toObject();
+        taskObj.invitation = true;
+        return taskObj;
+      });
+
+      // Combining all tasks now
+      const allTasks = [...tasks, ...collaboratingTasks, ...invitationTasks];
+
+      res.status(200).json(allTasks);
     } else {
       res.status(400).json({ message: "Invalid User Id" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    // console.error(error);
+    res.status(500).json({ message: `Server Error - ${error.message}` });
   }
 });
 
@@ -168,17 +213,24 @@ router.post("/count-tasks", async function (req, res) {
       const todo = await Task.find({ isCompleted: false, owner: userId })
         .count()
         .exec();
+      const collaborating = await Collaborator.find({
+        userId: userId,
+        invitationStatus: "accepted",
+      }).count();
 
-      //   console.log("Tasks -", !tasks);
-      //   console.log("Done -", !done);
-      //   console.log("Todo -", !todo);
-      // NOTE: This will bring error incase zero is returned
+      const invitations = await Collaborator.find({
+        userId: userId,
+        invitationStatus: { $ne: "accepted" },
+      }).count();
 
-      //   if (!tasks || !done || !todo) {
-      //     return res.status(404).json({ message: "Unable to get Tasks counts" });
-      //   }
+      // NOTE: Okay with warning
+      // if (!tasks || !done || !todo) {
+      //   return res
+      //     .status(200)
+      //     .json({ message: "No tasks found", tasks, done, todo });
+      // }
 
-      res.status(200).json({ tasks: tasks, done: done, todo: todo });
+      res.status(200).json({ tasks, done, todo, collaborating, invitations });
     } else {
       res.status(400).json({ message: "Invalid User Id" });
     }
@@ -195,12 +247,11 @@ router.post("/done-tasks", async function (req, res) {
 
     if (ObjectId.isValid(userId)) {
       const done = await Task.find({ isCompleted: true, owner: userId })
-        .populate("collaborators", "-password")
         .populate("owner", "-password")
         .exec();
 
       // if (!done.length) {
-      //   res.status(404).json({ message: "Unable to get Done Tasks" });
+      //   res.status(200).json({ message: "No tasks found", done });
       // }
 
       res.status(200).json(done);
@@ -213,7 +264,7 @@ router.post("/done-tasks", async function (req, res) {
   }
 });
 
-// Get All, todo  tasks for user
+// Get All, todo tasks for user
 router.post("/todo-tasks", async function (req, res) {
   try {
     const { userId } = req.body;
@@ -223,7 +274,6 @@ router.post("/todo-tasks", async function (req, res) {
         isCompleted: false,
         owner: req.body.userId,
       })
-        .populate("collaborators", "-password")
         .populate("owner", "-password")
         .exec();
 

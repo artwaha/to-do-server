@@ -1,0 +1,50 @@
+[
+  {
+    "title": "Organize team meeting",
+    "description": "Discuss project progress and upcoming deadlines",
+    "isCompleted": true,
+    "owner": ObjectId("63f7c47c595aab4eb0165135")
+  },
+  {
+    "title": "Develop new feature",
+    "description": "Create UI for new feature and integrate with backend",
+    "isCompleted": false,
+    "owner": ObjectId("63f7c47c595aab4eb0165135")
+  },
+  {
+    "title": "Complete marketing report",
+    "description": "Analyze market trends and create report",
+    "isCompleted": false,
+    "owner": ObjectId("63f7c47c595aab4eb0165135")
+  },
+  {
+    "title": "Wash Dishes",
+    "description": "Wash dishes and clean the kitchen",
+    "isCompleted": false,
+    "owner": ObjectId("63f7c47c595aab4eb0165136")
+  },
+  {
+    "title": "Do Laundry",
+    "description": "Wash and fold clothes",
+    "isCompleted": false,
+    "owner": ObjectId("63f7c47c595aab4eb0165136")
+  },
+  {
+    "title": "Vacuum Living Room",
+    "description": "Vacuum the carpet and clean the couch",
+    "isCompleted": false,
+    "owner": ObjectId("63f7c47c595aab4eb0165136")
+  },
+  {
+    "title": "Buy Groceries",
+    "description": "Buy milk, bread, eggs, and cheese from the supermarket",
+    "isCompleted": false,
+    "owner": ObjectId("63f866d159b75af7fa28231d")
+  },
+  {
+    "title": "Complete Project Report",
+    "description": "Compile and finalize the project report for presentation to stakeholders",
+    "isCompleted": true,
+    "owner": ObjectId("63f844a3e4230b11711b97f4")
+  }
+]
